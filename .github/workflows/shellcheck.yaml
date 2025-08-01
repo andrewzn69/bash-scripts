@@ -32,11 +32,29 @@ jobs:
           echo "No shell scripts found"
         fi
 
-    - name: Run Shellcheck
+    - name: Install tools
       if: steps.find-scripts.outputs.found == 'true'
       run: |
         sudo apt-get update && sudo apt-get install -y shellcheck
 
+        wget -O shfmt https://github.com/mvdan/sh/releases/latest/download/shfmt_v3.8.0_linux_amd64
+        chmod +x shfmt
+        sudo mv shfmt /usr/local/bin/
+
+    - name: Format shell scripts
+      if: steps.find-scripts.outputs.found == 'true'
+      run: |
+        echo "Formatting shell scripts with shfmt:"
+        cat unique_shell_files.txt
+
+        while IFS= read -r file; do
+          echo "Formatting: $file"
+          shfmt -w -i 2 -ci "$file"
+        done < unique_shell_files.txt
+
+    - name: Run Shellcheck
+      if: steps.find-scripts.outputs.found == 'true'
+      run: |
         echo "Running shellcheck on the following files:"
         cat unique_shell_files.txt
 
