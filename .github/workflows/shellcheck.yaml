@@ -1,0 +1,51 @@
+name: shellcheck
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  shellcheck:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Find shell scripts
+      id: find-scripts
+      run: |
+        find . -name "*.sh" -type f > shell_files.txt
+        find . -type f -exec grep -l '^#!/bin/.*sh' {} \; >> shell_files.txt || true
+        find . -type f -exec grep -l '^#!/usr/bin/.*sh' {} \; >> shell_files.txt || true
+
+        sort shell_files.txt | uniq | grep -v '\.git/' > unique_shell_files.txt || true
+
+        if [ -s unique_shell_files.txt ]; then
+          echo "found=true" >> $GITHUB_OUTPUT
+          echo "Shell scripts found:"
+          cat unique_shell_files.txt
+        else
+          echo "found=false" >> $GITHUB_OUTPUT
+          echo "No shell scripts found"
+        fi
+
+    - name: Run Shellcheck
+      if: steps.find-scripts.outputs.found == 'true'
+      run: |
+        sudo apt-get update && sudo apt-get install -y shellcheck
+
+        echo "Running shellcheck on the following files:"
+        cat unique_shell_files.txt
+
+        exit_code=0
+        while IFS= read -r file; do
+          echo "Checking: $file"
+          if ! shellcheck "$file"; then
+            exit_code=1
+          fi
+        done < unique_shell_files.txt
+
+        exit $exit_code
