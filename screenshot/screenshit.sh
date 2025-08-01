@@ -1,1 +1,1 @@
-screenshit.sh
+/home/zimn/.config/hypr/scripts/screenshit.sh

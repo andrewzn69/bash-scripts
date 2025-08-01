@@ -1,0 +1,1 @@
+/home/zimn/.config/hypr/scripts/colorpicker.sh
