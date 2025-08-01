@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+pkill eww
+pkill myshell
+eww daemon
+
+eww open bar
+
+"$HOME"/.config/eww/scripts/myshell/./myshell --eww --file
