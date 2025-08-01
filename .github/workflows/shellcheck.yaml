@@ -41,16 +41,22 @@ jobs:
         chmod +x shfmt
         sudo mv shfmt /usr/local/bin/
 
-    - name: Format shell scripts
+    - name: Check shell script formatting
       if: steps.find-scripts.outputs.found == 'true'
       run: |
-        echo "Formatting shell scripts with shfmt:"
+        echo "Checking shell script formatting with shfmt:"
         cat unique_shell_files.txt
 
+        exit_code=0
         while IFS= read -r file; do
-          echo "Formatting: $file"
-          shfmt -w -i 2 -ci "$file"
+          echo "Checking format: $file"
+          if ! shfmt -d "$file"; then
+            echo "ERROR: $file is not properly formatted"
+            exit_code=1
+          fi
         done < unique_shell_files.txt
+
+        exit $exit_code
 
     - name: Run Shellcheck
       if: steps.find-scripts.outputs.found == 'true'
